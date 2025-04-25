@@ -5,6 +5,9 @@ This project was made as an assignment project for the Web Development Course co
 
 ### Features Includes :
 - Search (Ajax call used)
-- Filter (based on amount and rating)
-- Favourites for later
+- Sorting (Based on rent amount)
+- Filter (based on gender type)
+- Favourites (For Interested Properties as saved later)
+- Appropiate Breadcrumbs
+- Reviews (Displayed from Databse)
 - SignIn and SignOut (using appropiate sessions in php namely phpsessionid)

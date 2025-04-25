@@ -413,7 +413,17 @@ $interested_users_count = mysqli_num_rows($result_4);
         }
         ?>
     </div>
-
+    <?php  if ($user_id ) {?>
+    <div class="property-testimonials page-container">
+        <h3>Add New Review</h3>
+        <form action="api/add_review.php" class="form" role="form" method="post" id="review-form">
+            <input type="hidden" name="property_id" value="<?= $property_id ?>">
+            <label for="review">Enter Your Review :</label>
+            <textarea name="review" id="review" rows="7" cols="75" style="resize: none;"></textarea>
+            <button class="d-block badge-pill badge-primary" type="submit">Submit</button>
+        </form>
+    </div>
+  <?php  } ?>
     <?php
     include "includes/signup_modal.php";
     include "includes/login_modal.php";
