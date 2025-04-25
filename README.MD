@@ -9,5 +9,5 @@ This project was made as an assignment project for the Web Development Course co
 - Filter (based on gender type)
 - Favourites (For Interested Properties as saved later)
 - Appropiate Breadcrumbs
-- Reviews (Displayed from Databse)
+- Add and View Reviews (Displayed from Databse)
 - SignIn and SignOut (using appropiate sessions in php namely phpsessionid)
