@@ -12,8 +12,8 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$content = $_POST['review'] ?? null;
-$property_id = $_POST['property_id'] ?? null;
+$content = $_POST['review'] ;
+$property_id = $_POST['property_id'] ;
 
 if (!$content || !$property_id) {
     echo json_encode(["success" => false, "message" => "Invalid input!"]);
@@ -25,8 +25,8 @@ $sql_latest_id = "SELECT MAX(id) AS latest_id FROM testimonials";
 $result = $conn->query($sql_latest_id);
 $latest_id = ($result && $row = $result->fetch_assoc()) ? $row['latest_id'] + 1 : 1;
 
-$sql = "INSERT INTO testimonials (id, property_id, user_name, content) 
-    VALUES ($latest_id, $property_id, (SELECT full_name FROM users WHERE id = $user_id), '$content')";
+$sql = "INSERT INTO testimonials (id, property_id, user_name, content, user_image) 
+    VALUES ($latest_id, $property_id, (SELECT full_name FROM users WHERE id = $user_id), '$content', (SELECT profile_picture FROM users WHERE id = $user_id))";
 
 if ($conn->query($sql) === TRUE) {
     $response = ["success" => true, "message" => "Review added successfully!"];

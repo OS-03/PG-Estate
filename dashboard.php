@@ -64,10 +64,10 @@ $interested_properties = mysqli_fetch_all($result_2, MYSQLI_ASSOC);
     <div class="my-profile page-container">
         <h1>My Profile</h1>
         <div class="row">
-            <div class="col-md-3 profile-img-container">
-                <i class="fas fa-user profile-img"></i>
+            <div class="col-md-3 profile-img-container m-0">
+                    <img src="<?= $user['profile_picture'] ?>" alt="profile_picture" style="width: 100%; height: auto; max-width:9rem; border-radius: 50%;">
             </div>
-            <div class="col-md-9">
+            <div class="col-md-9 mt-3">
                 <div class="row no-gutters justify-content-between align-items-end">
                     <div class="profile">
                         <div class="name"><?= $user['full_name'] ?></div>
@@ -75,9 +75,11 @@ $interested_properties = mysqli_fetch_all($result_2, MYSQLI_ASSOC);
                         <div class="phone"><?= $user['phone'] ?></div>
                         <div class="college"><?= $user['college_name'] ?></div>
                     </div>
+                <form action="profile.php" method="get">
                     <div class="edit">
-                        <div class="edit-profile">Edit Profile</div>
+                        <button type="submit" class="edit-profile btn btn-link">Edit Profile</button>
                     </div>
+                </form>
                 </div>
             </div>
         </div>
