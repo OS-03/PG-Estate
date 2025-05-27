@@ -1,6 +1,6 @@
 # Node modules
 node_modules/
-vendor/
+api/vendor/
 
 # Logs
 logs
@@ -33,12 +33,14 @@ bower_components/
 
 # dotenv environment variables file
 .env
+api/.env
 .env.test
 .env.production
 .env.*
 
 # OS generated files
 .DS_Store
+api/.DS_Store
 Thumbs.db
 
 # Editor directories and files
