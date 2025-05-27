@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: PGLife
-    env: php
-    buildCommand: composer install
-    startCommand: php -S 0.0.0.0:80 -t .
-    plan: free

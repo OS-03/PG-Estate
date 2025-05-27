@@ -1,6 +1,6 @@
 import React from 'react';
-import Stars from './Stars';
-import Interested from './Interested';
+import Stars from './Stars_final';
+import Interested from './Interested_final';
 import { base_path } from './utils.js';
 
 const PropertyCard = props => {

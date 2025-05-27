@@ -1,98 +1,130 @@
 <?php
-
-
-
 session_start();
 header("Access-Control-Allow-Origin: *");
 header('Content-Type: application/json');
+require __DIR__ . '/../vendor/autoload.php';
 require 'cloudinary_config.php';
-require "../includes/database_connect.php";
-use Cloudinary\Uploader;
 
-// $cloudinary = new Cloudinary();
-// $uploadApi = new UploadApi($cloudinary);
+use Cloudinary\Cloudinary;
+use Cloudinary\Api\Upload\UploadApi;
 
+// Ensure $cloudinary_config is loaded
+if (!isset($cloudinary_config['cloud_name'], $cloudinary_config['api_key'], $cloudinary_config['api_secret'])) {
+    echo json_encode(["success" => false, "message" => "Cloudinary config missing"]);
+    exit();
+}
+
+$cloudinary = new Cloudinary([
+    'cloud' => [
+        'cloud_name' => $cloudinary_config['cloud_name'],
+        'api_key'    => $cloudinary_config['api_key'],
+        'api_secret' => $cloudinary_config['api_secret'],
+    ],
+    'url' => [
+        'secure' => true
+    ]
+]);
+
+// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(["success" => false, "is_logged_in" => false]);
+    echo json_encode(["success" => false, "message" => "User not logged in"]);
     exit();
 }
 
 $user_id = $_SESSION['user_id'];
-$full_name = $_POST['full_name'];
-$email = $_POST['email'];
-$phone = $_POST['phone'];
-$profile = $_FILES['profile_picture'];
 
+// Collect user details from POST
+$full_name = isset($_POST['full_name']) ? trim($_POST['full_name']) : '';
+$email = isset($_POST['email']) ? trim($_POST['email']) : '';
+$phone = isset($_POST['phone']) ? trim($_POST['phone']) : '';
+$gender = isset($_POST['gender']) ? trim($_POST['gender']) : '';
+$college_name = isset($_POST['college_name']) ? trim($_POST['college_name']) : '';
+$profile_picture = null;
 
-$target_file = $profile["tmp_name"];
-$imageFileType = strtolower(pathinfo($profile["name"], PATHINFO_EXTENSION));
+// Handle profile picture upload if present
+if (
+    isset($_FILES['profile_picture']) &&
+    $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE
+) {
+    if (
+        isset($_FILES['profile_picture']['tmp_name']) &&
+        $_FILES['profile_picture']['tmp_name'] !== '' &&
+        $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK &&
+        is_uploaded_file($_FILES['profile_picture']['tmp_name'])
+    ) {
+        $profile = $_FILES['profile_picture'];
+        $imageFileType = strtolower(pathinfo($profile["name"], PATHINFO_EXTENSION));
+        $check = getimagesize($profile["tmp_name"]);
+        if ($check === false) {
+            echo json_encode(["success" => false, "message" => "File is not an image."]);
+            exit();
+        }
+        if ($profile["size"] > 2000000) {
+            echo json_encode(["success" => false, "message" => "File is too large."]);
+            exit();
+        }
+        if (!in_array($imageFileType, ["jpg", "jpeg", "png", "gif"])) {
+            echo json_encode(["success" => false, "message" => "Only JPG, JPEG, PNG & GIF files are allowed."]);
+            exit();
+        }
+        // Upload to Cloudinary
+        try {
+            $uploadApi = new UploadApi();
+            $upload_result = $uploadApi->upload($profile["tmp_name"], [
+                "folder" => "profile_pictures/",
+                "public_id" => pathinfo($profile["name"], PATHINFO_FILENAME) . "_" . $user_id,
+                "overwrite" => true
+            ]);
+            $profile_picture = $upload_result['secure_url'];
+        } catch (Exception $e) {
+            echo json_encode(["success" => false, "message" => "Cloudinary upload failed: " . $e->getMessage()]);
+            exit();
+        }
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "No profile image uploaded or upload error. Make sure your form uses enctype=\"multipart/form-data\" and PHP upload limits are sufficient."
+        ]);
+        exit();
+    }
+}
 
-// Upload to Cloudinary
-try {
-    $upload_result = Uploader::upload($target_file, [
-        "folder" => "profile_pictures/",
-        "public_id" => pathinfo($profile["name"], PATHINFO_FILENAME),
-        "overwrite" => true,
-        "resource_type" => "image"
+// Update user's details in DB
+require "../includes/database_connect.php";
+$name_escaped = mysqli_real_escape_string($conn, $full_name);
+$email_escaped = mysqli_real_escape_string($conn, $email);
+$phone_escaped = mysqli_real_escape_string($conn, $phone);
+$gender_escaped = mysqli_real_escape_string($conn, $gender);
+$college_escaped = mysqli_real_escape_string($conn, $college_name);
+
+// Only update fields that are not empty (prevents overwriting with empty values)
+$update_fields_arr = [];
+if ($full_name !== '') $update_fields_arr[] = "full_name='$name_escaped'";
+if ($email !== '') $update_fields_arr[] = "email='$email_escaped'";
+if ($phone !== '') $update_fields_arr[] = "phone='$phone_escaped'";
+if ($gender !== '') $update_fields_arr[] = "gender='$gender_escaped'";
+if ($college_name !== '') $update_fields_arr[] = "college_name='$college_escaped'";
+if ($profile_picture) {
+    $profile_picture_escaped = mysqli_real_escape_string($conn, $profile_picture);
+    $update_fields_arr[] = "profile_picture='$profile_picture_escaped'";
+}
+
+if (count($update_fields_arr) === 0) {
+    echo json_encode(["success" => false, "message" => "No data to update."]);
+    exit();
+}
+
+$update_fields = implode(", ", $update_fields_arr);
+$sql = "UPDATE users SET $update_fields WHERE id=$user_id";
+$result = mysqli_query($conn, $sql);
+
+if ($result) {
+    header("Location: /PGLife/dashboard.php");
+    exit();
+} else {
+    echo json_encode([
+        "success" => false,
+        "message" => "Failed to update user details in database. Error: " . mysqli_error($conn)
     ]);
-    $target_file = $upload_result['secure_url'];
-} catch (Exception $e) {
-    echo json_encode(["success" => false, "message" => "Cloudinary upload failed: " . $e->getMessage()]);
-    exit();
 }
-
-// Check if image file is a valid image
-$check = getimagesize($profile["tmp_name"]);
-if ($check === false) {
-    echo json_encode(["success" => false, "message" => "File is not an image."]);
-    exit();
-}
-
-// Check file size (limit to 2MB)
-if ($profile["size"] > 2000000) {
-    echo json_encode(["success" => false, "message" => "File is too large."]);
-    exit();
-}
-
-// Allow certain file formats
-if (!in_array($imageFileType, ["jpg", "jpeg", "png", "gif"])) {
-    echo json_encode(["success" => false, "message" => "Only JPG, JPEG, PNG & GIF files are allowed."]);
-    exit();
-}
-
-// Attempt to upload file
-if (!move_uploaded_file($profile["tmp_name"], $target_file)) {
-    echo json_encode(["success" => false, "message" => "There was an error uploading your file."]);
-    exit();
-}
-
-$profile_picture = $target_file;
-
-$result = mysqli_query($conn, $sql);
-if (!$result) {
-    $response = array("success" => false, "message" => "Something went wrong!");
-    echo json_encode($response);
-    return;
-}
-$row_count = mysqli_num_rows($result);
-if ($row_count != 0) {
-    $response = array("success" => false, "message" => "This email id is already registered with us!");
-    echo json_encode($response);
-    return;
-}
-
-$sql = "UPDATE users SET full_name = '$full_name', email = '$email', phone = '$phone', profile_picture = '$profile_picture' WHERE id = '$user_id'";
-$result = mysqli_query($conn, $sql);
-if (!$result) {
-    $response = array("success" => false, "message" => "Something went wrong!");
-    echo json_encode($response);
-    return;
-}
-
-$response = array("success" => true, "message" => "Profile updated successfully!");
-echo json_encode($response);
-mysqli_close($conn);
-
-// Redirect to dashboard
-header("Location: /dashboard.php");
 exit();

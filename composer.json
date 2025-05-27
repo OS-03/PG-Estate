@@ -1,0 +1,15 @@
+{
+    "name": "owaisshaikh/pg-life",
+    "autoload": {
+        "psr-4": {
+            "Owaisshaikh\\PgLife\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "OS-03",
+            "email": "ferozshaikh2222@gmail.com"
+        }
+    ],
+    "require": {}
+}

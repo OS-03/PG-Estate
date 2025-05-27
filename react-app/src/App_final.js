@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import FilterBar from './FilterBar';
-import FilterModal from './FilterModal';
-import PropertyCard from './PropertyCard';
-import NoProperty from './NoProperty';
+import FilterBar from './FilterBar_final';
+import FilterModal from './FilterModal_final';
+import PropertyCard from './PropertyCard_final';
+import NoProperty from './NoProperty_final';
 import { base_path } from './utils.js';
 
 class App extends Component {
@@ -32,7 +32,7 @@ class App extends Component {
       });
   }
 
-  toggleInterested = property_id => {
+  toggleInterested = (property_id) => {
     fetch(`${base_path}/api/toggle_interested.php?property_id=${property_id}`)
       .then(response => response.json())
       .then(responseData => {
@@ -49,7 +49,7 @@ class App extends Component {
       });
   }
 
-  updateInterested = property_id => {
+  updateInterested = (property_id) => {
     let updated_properties = [...this.state.properties];
     updated_properties.forEach((property) => {
       if (property.id === property_id) {
@@ -67,13 +67,13 @@ class App extends Component {
     });
   }
 
-  updateSort = sort => {
+  updateSort = (sort) => {
     this.setState({
       sort: sort
     });
   }
 
-  updateFilter = gender => {
+  updateFilter = (gender) => {
     this.setState({
       filter: {
         gender: gender
